@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Falling Ball Simulation</title>
+    <style>
+        body { margin: 0; overflow: hidden; }
+        canvas { display: block; }
+    </style>
+</head>
+<body>
+    <script>
+        // Include the Three.js library
+        const script = document.createElement('script');
+        script.src = 'https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js';
+        document.head.appendChild(script);
+
+        script.onload = () => {
+            // Initialize the scene
+            const scene = new THREE.Scene();
+            const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            const renderer = new THREE.WebGLRenderer();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.shadowMap.enabled = true; // Enable shadow maps
+            renderer.setClearColor(0x87CEEB); // Set background color to sky blue
+            document.body.appendChild(renderer.domElement);
+
+            // Create a smaller grey plane
+            const planeGeometry = new THREE.PlaneGeometry(20, 20);
+            const planeMaterial = new THREE.MeshStandardMaterial({ color: 0xaaaaaa });
+            const plane = new THREE.Mesh(planeGeometry, planeMaterial);
+            plane.rotation.x = - Math.PI / 2;
+            plane.position.y = -1; // Position the plane lower
+            plane.receiveShadow = true; // Plane will receive shadows
+            scene.add(plane);
+
+            // Create a ball (sphere) with shadow
+            const geometry = new THREE.SphereGeometry(1, 32, 32);
+            const material = new THREE.MeshStandardMaterial({ color: 0x0077ff });
+            const ball = new THREE.Mesh(geometry, material);
+            ball.castShadow = true; // Ball will cast shadows
+            scene.add(ball);
+
+            // Add basic lighting
+            const ambientLight = new THREE.AmbientLight(0x404040); // Ambient light
+            scene.add(ambientLight);
+
+            const pointLight = new THREE.PointLight(0xffffff, 1, 100); // Point light
+            pointLight.position.set(10, 20, 10);
+            pointLight.castShadow = true; // Light can cast shadows
+            scene.add(pointLight);
+
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
+            directionalLight.position.set(-10, 20, -10).normalize();
+            directionalLight.castShadow = true; // Light can cast shadows
+            scene.add(directionalLight);
+
+            // Set initial position and velocity
+            ball.position.y = 5; // Start above the plane
+            let yVelocity = 0;
+            const gravity = 0.01;
+            const bounceFactor = -0.7;
+
+            // Set the camera position to diagonal view
+            camera.position.set(10, 10, 10);
+            camera.lookAt(scene.position);
+
+            // Animation loop
+            function animate() {
+                requestAnimationFrame(animate);
+
+                // Update ball position
+                yVelocity -= gravity; // Apply gravity
+                ball.position.y += yVelocity;
+
+                // Check for bounce
+                if (ball.position.y <= 1) { // Bounce off the plane
+                    ball.position.y = 1;
+                    yVelocity *= bounceFactor; // Apply bounce factor
+                }
+
+                // Render the scene
+                renderer.render(scene, camera);
+            }
+            animate();
+
+            // Handle window resizing
+            window.addEventListener('resize', () => {
+                renderer.setSize(window.innerWidth, window.innerHeight);
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+            });
+        };
+    </script>
+</body>
+</html>
